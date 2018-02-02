@@ -5,7 +5,7 @@ from jinja2 import Template
 from lxml import etree
 
 # package modules
-from service import Service
+from .service import Service
 from pyorbit.exception import *
 
 """

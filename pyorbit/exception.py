@@ -36,6 +36,21 @@ class RpcError(Exception):
 
     __str__ = __repr__
 
+class GetError(RpcError):
+
+    """
+    Generated in response to a Get operation.
+    """
+
+    def __init__(self, rsp, cmd=None, errs=None):
+        RpcError.__init__(self, cmd, rsp, errs)
+
+    def __repr__(self):
+        return "{}(edit_path: {}, bad_element: {}, message: {})"\
+            .format(self.__class__.__name__, self.rpc_error['edit_path'],
+                    self.rpc_error['bad_element'], self.message)
+
+    __str__ = __repr__
 
 class CommitError(RpcError):
 

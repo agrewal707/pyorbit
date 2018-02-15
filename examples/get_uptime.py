@@ -20,7 +20,7 @@ from pyorbit.services import Status
 # Running this example and piping the output through 'jq'
 # should produce JSON data like the following:
 #
-#   python3 pyorbit/examples/get_status.py 192.168.1.1 admin admin | jq
+#   python3 pyorbit/examples/get_uptime.py 192.168.1.1 admin admin | jq
 #   {
 #     "data": {
 #       "@xmlns": "urn:ietf:params:xml:ns:netconf:base:1.0",
@@ -34,6 +34,12 @@ from pyorbit.services import Status
 #       }
 #     }
 #   }
+#
+# This next example shows how to use 'jq' to extract just the value that
+# we're interested in:
+#
+#   python3 pyorbit/examples/get_uptime.py 192.168.1.1 admin admin | jq ".data.system.uptime.seconds | tonumber"
+#   175732
 
 def main(host, user, passwd):
     try:

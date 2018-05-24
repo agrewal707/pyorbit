@@ -1,8 +1,8 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import sys, os, warnings
 from pyorbit import Device
-from pyorbit import ConnectError
+from pyorbit import ConnectError, ConfigLoadError
 from pyorbit.services import Config
 
 ntp_template="""
@@ -31,6 +31,9 @@ def main(host, user, passwd):
             print(rsp)
     except ConnectError as err:
         print ("Cannot connect to device: {0}".format(err))
+        return
+    except ConfigLoadError as err:
+        print ("Config load error: {0}".format(err))
         return
 
 if __name__ == '__main__':

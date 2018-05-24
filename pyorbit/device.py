@@ -49,11 +49,11 @@ class Device(object):
     Orbit Device class.
     """
 
-    def __init__(self, *vargs, **kvargs):
+    def __init__(self, *args, **kwargs):
         """
         Device object constructor.
 
-        :param str vargs[0]: host-name or ipaddress.  This is an
+        :param str args[0]: host-name or ipaddress.  This is an
                              alternative for **host**
 
         :param str host:
@@ -82,15 +82,15 @@ class Device(object):
 
         """
 
-        hostname = vargs[0] if len(vargs) else kvargs.get('host')
+        hostname = args[0] if len(args) else kwargs.get('host')
         if hostname is None:
             raise ValueError("You must provide the 'host' value")
         self._hostname = hostname
 
-        self._port = kvargs.get('port', 830)
+        self._port = kwargs.get('port', 830)
 
-        self._auth_user = kvargs.get('username') or os.getenv('USER')
-        self._auth_password = kvargs.get('password') or kvargs.get('admin')
+        self._auth_user = kwargs.get('username') or os.getenv('USER')
+        self._auth_password = kwargs.get('password') or kwargs.get('admin')
 
         # initialize instance variables
         self._conn = None
@@ -112,7 +112,7 @@ class Device(object):
         """
         return self._hostname
 
-    def open(self, *vargs, **kvargs):
+    def open(self, *args, **kwargs):
         """
         Opens a connection to the device using existing login/auth
         information.

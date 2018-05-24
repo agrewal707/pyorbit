@@ -1,2 +1,2 @@
 from .device import Device
-from .exception import ConnectError
+from .exception import *

@@ -1,90 +1,37 @@
+import json
+import xmltodict
+import xml.etree.ElementTree as ET
 from ncclient.operations.rpc import RPCError
+
+# Device RPC exceptions
 
 class RpcError(Exception):
 
     """
-    Parent class for all pyorbit Exceptions
+    Parent class for all RPC exceptions
     """
 
-    def __init__(self, cmd=None, rsp=None, errs=None, dev=None,
-                 timeout=None):
+    def __init__(self, cmd=None, rsp=None, dev=None):
         """
           :cmd: is the rpc command
           :rsp: is the rpc response (after <rpc-reply>)
-          :errs: is a list of dictionaries of extracted <rpc-error> elements.
           :dev: is the device rpc was executed on
-          :timeout: is the timeout value of the device
         """
         self.cmd = cmd
         self.rsp = rsp
         self.dev = dev
-        self.timeout = timeout
-        self.rpc_error = None
-        self.xml = rsp
-        pass
+        self.rsp_json = json.dumps(xmltodict.parse(ET.tostring(rsp)))
 
     def __repr__(self):
         """
-          pprints the response XML attribute
+          pprints the RPC error response
         """
-        if self.rpc_error is not None:
-            return "{}(severity: {}, bad_element: {}, message: {})"\
-                .format(self.__class__.__name__, self.rpc_error['severity'],
-                        self.rpc_error['bad_element'], self.message)
+        if self.rsp_json is not None:
+            return self.rsp_json
         else:
             return self.__class__.__name__
 
     __str__ = __repr__
-
-class GetError(RpcError):
-
-    """
-    Generated in response to a Get operation.
-    """
-
-    def __init__(self, rsp, cmd=None, errs=None):
-        RpcError.__init__(self, cmd, rsp, errs)
-
-    def __repr__(self):
-        return "{}(edit_path: {}, bad_element: {}, message: {})"\
-            .format(self.__class__.__name__, self.rpc_error['edit_path'],
-                    self.rpc_error['bad_element'], self.message)
-
-    __str__ = __repr__
-
-class CommitError(RpcError):
-
-    """
-    Generated in response to a commit-check or a commit action.
-    """
-
-    def __init__(self, rsp, cmd=None, errs=None):
-        RpcError.__init__(self, cmd, rsp, errs)
-
-    def __repr__(self):
-        return "{}(edit_path: {}, bad_element: {}, message: {})"\
-            .format(self.__class__.__name__, self.rpc_error['edit_path'],
-                    self.rpc_error['bad_element'], self.message)
-
-    __str__ = __repr__
-
-
-class ConfigLoadError(RpcError):
-
-    """
-    Generated in response to a failure when loading a configuration.
-    """
-
-    def __init__(self, rsp, cmd=None, errs=None):
-        RpcError.__init__(self, cmd, rsp, errs)
-
-    def __repr__(self):
-        return "{}(severity: {}, bad_element: {}, message: {})"\
-            .format(self.__class__.__name__, self.rpc_error['severity'],
-                    self.rpc_error['bad_element'], self.message)
-
-    __str__ = __repr__
-
 
 class LockError(RpcError):
 
@@ -108,38 +55,65 @@ class UnlockError(RpcError):
         RpcError.__init__(self, rsp=rsp)
 
 
-class PermissionError(RpcError):
+class ConfigLoadError(RpcError):
 
     """
-    Generated in response to invoking an RPC for which the
-    auth user does not have user-class permissions.
-
-    PermissionError.message gives you the specific RPC that cause
-    the exceptions
+    Generated in response to a failure when loading a configuration.
     """
 
     def __init__(self, rsp, cmd=None, errs=None):
-        RpcError.__init__(self, cmd=cmd, rsp=rsp, errs=errs)
-        self.message = rsp.findtext('.//bad-element')
+        RpcError.__init__(self, cmd, rsp, errs)
 
-
-class RpcTimeoutError(RpcError):
+class ConfigRollbackError(RpcError):
 
     """
-    Generated in response to a RPC execution timeout.
+    Generated in response to a failure when rollback configuration.
     """
 
-    def __init__(self, dev, cmd, timeout):
-        RpcError.__init__(self, dev=dev, cmd=cmd, timeout=timeout)
+    def __init__(self, rsp, cmd=None, errs=None):
+        RpcError.__init__(self, cmd, rsp, errs)
 
-    def __repr__(self):
-        return "{}(host: {}, cmd: {}, timeout: {})"\
-            .format(self.__class__.__name__, self.dev.hostname,
-                    self.cmd, self.timeout)
 
-    __str__ = __repr__
+class ValidateError(RpcError):
 
-# Connection exceptions
+    """
+    Generated in response to a validate action.
+    """
+
+    def __init__(self, rsp, cmd=None, errs=None):
+        RpcError.__init__(self, cmd, rsp, errs)
+
+
+class CommitError(RpcError):
+
+    """
+    Generated in response to a commit-check or a commit action.
+    """
+
+    def __init__(self, rsp, cmd=None, errs=None):
+        RpcError.__init__(self, cmd, rsp, errs)
+
+
+class GetError(RpcError):
+
+    """
+    Generated in response to a Get operation.
+    """
+
+    def __init__(self, rsp, cmd=None, errs=None):
+        RpcError.__init__(self, cmd, rsp, errs)
+
+
+class FwError(RpcError):
+
+    """
+    Generated in response to a Firmware operations.
+    """
+
+    def __init__(self, rsp, cmd=None, errs=None):
+        RpcError.__init__(self, cmd, rsp, errs)
+
+# Device connection exceptions
 
 class ConnectError(Exception):
 
@@ -227,3 +201,11 @@ class ConnectionClosedError(ConnectError):
     def __init__(self, dev):
         ConnectError.__init__(self, dev=dev)
         dev.connected = False
+
+# Misc exception
+class ArgError(Exception):
+
+    """
+    Generated if the specified arguments are invalid.
+    """
+    pass

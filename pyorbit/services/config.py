@@ -1,4 +1,4 @@
-import re
+import re, os
 import xmltodict
 import json
 from jinja2 import Template
@@ -66,12 +66,12 @@ class Config(Service):
 
         return True
 
-    def get(self, **kvargs):
+    def get(self, **kwargs):
         """
         Get the configuration from target store.
 
         :returns:
-            ``True`` always when successful
+            Configuration in requested format when successful.
 
         :raises UnlockError: If you attempt to unlock a configuration
                              when you do not own the lock
@@ -79,27 +79,27 @@ class Config(Service):
         source = 'running'
         rsp_format = 'xml'
 
-        if 'source' in kvargs:
-            source = kvargs['source']
+        if 'source' in kwargs:
+            source = kwargs['source']
 
-        if 'format' in kvargs:
-            rsp_format = kvargs['format']
+        if 'format' in kwargs:
+            rsp_format = kwargs['format']
 
         try:
             rsp = self.dev._conn.get_config(source=source).data_xml
             if rsp_format == 'odict':
-                rsp = xmltodict.parse(out)
+                rsp = xmltodict.parse(rsp)
             if rsp_format == 'json':
                 rsp = json.dumps(xmltodict.parse(rsp))
         except Exception as err:
             if hasattr(err, 'xml') and isinstance(err.xml, etree._Element):
-                raise GetConfigError(rsp=err.xml)
+                raise GetError(rsp=err.xml)
             else:
                 raise
 
         return rsp
 
-    def load(self, **kvargs):
+    def load(self, **kwargs):
         """
         Loads changes into the candidate configuration.  Changes can be
         in the form of strings (xml), XML objects, and files.
@@ -150,8 +150,8 @@ class Config(Service):
         rpc_contents = None
 
         operation = 'merge'
-        if 'operation' in kvargs:
-            operation = kvargs['operation']
+        if 'operation' in kwargs:
+            operation = kwargs['operation']
 
         # private helpers
 
@@ -166,36 +166,36 @@ class Config(Service):
 
         def _lset_fromfile(path):
             """ setup the format based on path """
-            if 'format' not in kvargs:
-                kvargs['format'] = _lformat_byext(path)
+            if 'format' not in kwargs:
+                kwargs['format'] = _lformat_byext(path)
 
 
         def _lset_from_rexp(content):
             """ setup the format based on content """
             if re.search(r'^\s*<.*>$', content, re.MULTILINE):
-                kvargs['format'] = 'xml'
+                kwargs['format'] = 'xml'
             elif re.search(r'^\s*\{', content) and re.search(r'.*}\s*$', content):
-                kvargs['format'] = 'json'
+                kwargs['format'] = 'json'
             elif re.search(r'^\s*(set|delete|rename)\s', content):
-                kvargs['format'] = 'set'
+                kwargs['format'] = 'set'
 
         # if content is provided as argument
-        if 'content' in kvargs:
-            rpc_contents = kvargs['content']
+        if 'content' in kwargs:
+            rpc_contents = kwargs['content']
             if isinstance(rpc_contents, str):
-                if 'format' not in kvargs:
+                if 'format' not in kwargs:
                     _lset_from_rexp(rpc_contents)
 
         # if path is provided, use the static-config file
-        elif 'path' in kvargs:
-            rpc_contents = open(kvargs['path'], 'rU').read()
-            _lset_fromfile(kvargs['path'])
+        elif 'path' in kwargs:
+            rpc_contents = open(kwargs['path'], 'rU').read()
+            _lset_fromfile(kwargs['path'])
 
-        elif 'template' in kvargs:
-            template = kvargs['template']
+        elif 'template' in kwargs:
+            template = kwargs['template']
             if isinstance(template, str):
                 template = Template(template)
-            rpc_contents = template.render(kvargs.get('template_vars', {}))
+            rpc_contents = template.render(kwargs.get('template_vars', {}))
             _lset_from_rexp(rpc_contents)
 
         if rpc_contents is None:
@@ -221,7 +221,7 @@ class Config(Service):
             self.dev._conn.validate()
         except Exception as err:
             if hasattr(err, 'xml') and isinstance(err.xml, etree._Element):
-                raise LoadError(rsp=err.xml)
+                raise ValidateError(rsp=err.xml)
             else:
                 raise
 
@@ -246,13 +246,13 @@ class Config(Service):
             pass
         except Exception as err:
             if hasattr(err, 'xml') and isinstance(err.xml, etree._Element):
-                raise LoadError(rsp=err.xml)
+                raise ConfigDiffError(rsp=err.xml)
             else:
                 raise
 
         return None
 
-    def commit(self, **kvargs):
+    def commit(self, **kwargs):
         """
         Commit a configuration.
 
@@ -271,12 +271,12 @@ class Config(Service):
         """
         try:
             confirmed=False
-            if 'confirmed' in kvargs:
-                confirmed = kvargs['confirmed']
+            if 'confirmed' in kwargs:
+                confirmed = kwargs['confirmed']
 
             timeout=None
-            if 'timeout' in kvargs:
-                timeout = kvargs['timeout']
+            if 'timeout' in kwargs:
+                timeout = kwargs['timeout']
 
             rsp = self.dev._conn.commit(confirmed=confirmed, timeout=timeout)
         except Exception as err:
@@ -308,7 +308,7 @@ class Config(Service):
             pass
         except Exception as err:
             if hasattr(err, 'xml') and isinstance(err.xml, etree._Element):
-                raise RollbackError(rsp=err.xml)
+                raise ConfigRollbackError(rsp=err.xml)
             else:
                 raise
 

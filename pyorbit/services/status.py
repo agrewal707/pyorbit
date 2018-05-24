@@ -17,7 +17,7 @@ class Status(Service):
     * :meth:`get`: Retrieve running configuration and device state information.
     """
 
-    def get(self, **kvargs):
+    def get(self, **kwargs):
         """
         Retrieve running configuration and device state information.
 
@@ -35,11 +35,11 @@ class Status(Service):
         source = 'running'
         rsp_format = 'xml'
 
-        if 'filter' in kvargs:
-            filter = kvargs['filter']
+        if 'filter' in kwargs:
+            filter = kwargs['filter']
 
-        if 'format' in kvargs:
-            rsp_format = kvargs['format']
+        if 'format' in kwargs:
+            rsp_format = kwargs['format']
 
         try:
             rsp = self.dev._conn.get(filter=filter).data_xml

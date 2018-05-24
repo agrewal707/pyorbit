@@ -1,4 +1,6 @@
 *.py[cod]
+*.swp
+*.tags*
 
 # C extensions
 *.so
@@ -61,3 +63,6 @@ desktop.ini
 
 # PyCharm
 .idea
+
+# Ctags
+*.tags

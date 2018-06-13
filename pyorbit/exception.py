@@ -113,6 +113,15 @@ class FwError(RpcError):
     def __init__(self, rsp, cmd=None, errs=None):
         RpcError.__init__(self, cmd, rsp, errs)
 
+class PkiError(RpcError):
+
+    """
+    Generated in response to a PKI operations.
+    """
+
+    def __init__(self, rsp, cmd=None, errs=None):
+        RpcError.__init__(self, cmd, rsp, errs)
+
 # Device connection exceptions
 
 class ConnectError(Exception):

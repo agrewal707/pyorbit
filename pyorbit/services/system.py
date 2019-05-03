@@ -96,6 +96,82 @@ class System(Service):
                 raise
         return True
 
+    def create_snapshot(self, **kwargs):
+        """
+        Creates config snapshot.
+
+        :param str id:
+          Specify the identifer for the snapshot.
+
+        For example::
+            sys.create_snapshot(id="TEST")
+
+        :returns:
+            True
+
+        :raises: RpcError: On failure.
+        """
+
+        rpc = None
+
+        if 'id' in kwargs:
+            id = kwargs['id']
+        else:
+            raise ArgError("id must be specified")
+
+        rpc = """
+            <snapshot-create xmlns="com:gemds:mds-system">
+                <identifier>{}</identifier>
+            </snapshot-create>
+        """.format (id)
+
+        try:
+            self.dev._conn.rpc(rpc)
+        except Exception as err:
+            if hasattr(err, 'xml') and isinstance(err.xml, etree._Element):
+                raise RpcError(rsp=err.xml)
+            else:
+                raise
+        return True
+
+    def delete_snapshot(self, **kwargs):
+        """
+        Delete config snapshot.
+
+        :param str id:
+          Specify the identifer for the snapshot.
+
+        For example::
+            sys.delete_snapshot(id="TEST")
+
+        :returns:
+            True
+
+        :raises: RpcError: On failure.
+        """
+
+        rpc = None
+
+        if 'id' in kwargs:
+            id = kwargs['id']
+        else:
+            raise ArgError("id must be specified")
+
+        rpc = """
+            <snapshot-delete xmlns="com:gemds:mds-system">
+                <identifier>{}</identifier>
+            </snapshot-delete>
+        """.format (id)
+
+        try:
+            self.dev._conn.rpc(rpc)
+        except Exception as err:
+            if hasattr(err, 'xml') and isinstance(err.xml, etree._Element):
+                raise RpcError(rsp=err.xml)
+            else:
+                raise
+        return True
+
     def __init__(self, dev, **kwargs):
         """
         .. code-block:: python
